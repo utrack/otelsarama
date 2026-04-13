@@ -127,7 +127,7 @@ func TestAsyncProducer_ConcurrencyEdgeCases(t *testing.T) {
 
 			t.Run("panic when calling AsyncClose after Close", func(t *testing.T) {
 				p := tc.newAsyncProducer(t)
-				p.Close()
+				p.Close() //nolint:errcheck // we don't care about the error here, later should panic
 				assert.Panics(t, func() {
 					p.AsyncClose()
 				})
