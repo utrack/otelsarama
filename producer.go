@@ -163,6 +163,11 @@ func WrapAsyncProducer(saramaConfig *sarama.Config, p sarama.AsyncProducer, opts
 					continue // wait for closeAsyncSig
 				}
 				span := startProducerSpan(cfg, saramaConfig.Version, msg)
+				if !span.IsRecording() {
+					span.End()
+					p.Input() <- msg
+					continue
+				}
 
 				// Create message context, backend message metadata
 				mc := producerMessageContext{
@@ -201,13 +206,15 @@ func WrapAsyncProducer(saramaConfig *sarama.Config, p sarama.AsyncProducer, opts
 		}()
 		for msg := range p.Successes() {
 			key := msg.Metadata
-			mtx.Lock()
-			if mc, ok := producerMessageContexts[key]; ok {
-				delete(producerMessageContexts, key)
-				finishProducerSpan(mc.span, msg.Partition, msg.Offset, nil)
-				msg.Metadata = mc.metadataBackup // Restore message metadata
+			if spanID, ok := key.(trace.SpanID); ok {
+				mtx.Lock()
+				if mc, ok := producerMessageContexts[spanID]; ok {
+					delete(producerMessageContexts, spanID)
+					finishProducerSpan(mc.span, msg.Partition, msg.Offset, nil)
+					msg.Metadata = mc.metadataBackup // Restore message metadata
+				}
+				mtx.Unlock()
 			}
-			mtx.Unlock()
 			wrapped.successes <- msg
 		}
 	}()
