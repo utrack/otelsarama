@@ -49,3 +49,5 @@ jobs:
         run: go mod download
       - name: Test (Unit)
         run: go test --failfast ./... -v
+      - name: Test (Unit/separate package)
+        run: cd test && go test --failfast ./... -v

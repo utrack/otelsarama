@@ -22,7 +22,7 @@ import (
 	"github.com/IBM/sarama/mocks"
 	"github.com/stretchr/testify/assert"
 
-	oteltrace "go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestAsyncProducer_ConcurrencyEdgeCases(t *testing.T) {
@@ -54,7 +54,7 @@ func TestAsyncProducer_ConcurrencyEdgeCases(t *testing.T) {
 				defer timeout.Stop()
 				p := tc.newAsyncProducer(t)
 
-				p.Close()
+				p.Close() //nolint:errcheck // we don't care about the error here
 
 				select {
 				case <-timeout.C:
@@ -103,7 +103,7 @@ func TestAsyncProducer_ConcurrencyEdgeCases(t *testing.T) {
 
 			t.Run("panic when sending to Input after Close", func(t *testing.T) {
 				p := tc.newAsyncProducer(t)
-				p.Close()
+				p.Close() //nolint:errcheck // we don't care about the error here
 				assert.Panics(t, func() {
 					p.Input() <- &sarama.ProducerMessage{Key: sarama.StringEncoder("foo")}
 				})
@@ -121,7 +121,7 @@ func TestAsyncProducer_ConcurrencyEdgeCases(t *testing.T) {
 				p := tc.newAsyncProducer(t)
 				p.AsyncClose()
 				assert.Panics(t, func() {
-					p.Close()
+					p.Close() //nolint:errcheck // we don't care about the error here, this should panic
 				})
 			})
 
@@ -144,7 +144,7 @@ func newSaramaConfig() *sarama.Config {
 
 func BenchmarkWrapSyncProducer(b *testing.B) {
 	// Mock provider
-	provider := oteltrace.NewNoopTracerProvider()
+	provider := noop.NewTracerProvider()
 
 	cfg := newSaramaConfig()
 	// Mock sync producer
@@ -185,7 +185,7 @@ func BenchmarkMockSyncProducer(b *testing.B) {
 
 func BenchmarkWrapAsyncProducer(b *testing.B) {
 	// Mock provider
-	provider := oteltrace.NewNoopTracerProvider()
+	provider := noop.NewTracerProvider()
 
 	cfg := newSaramaConfig()
 	cfg.Producer.Return.Successes = true
