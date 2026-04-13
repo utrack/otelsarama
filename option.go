@@ -20,7 +20,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const defaultTracerName = "github.com/dnwe/otelsarama"
+const defaultTracerName = "github.com/utrack/otelsarama"
 
 type config struct {
 	TracerProvider trace.TracerProvider

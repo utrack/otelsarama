@@ -30,8 +30,8 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/dnwe/otelsarama"
-	"github.com/dnwe/otelsarama/example"
+	"github.com/utrack/otelsarama"
+	"github.com/utrack/otelsarama/example"
 )
 
 var brokers = flag.String("brokers", os.Getenv("KAFKA_PEERS"), "The Kafka brokers to connect to, as a comma separated list")
