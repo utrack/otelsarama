@@ -27,9 +27,9 @@ jobs:
           cache: false # golangci-lint-action has its own cache
           go-version: ${{ matrix.go-version }}
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.10.1
+          version: v2.11.4
   test:
     name: Unit Testing with Go ${{ matrix.go-version }}
     runs-on: ubuntu-latest
