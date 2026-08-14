@@ -20,13 +20,28 @@ import (
 
 type partitionConsumer struct {
 	sarama.PartitionConsumer
-	dispatcher consumerMessagesDispatcher
+	dispatcher *consumerMessagesDispatcherWrapper
 }
 
 // Messages returns the read channel for the messages that are returned by
 // the broker.
 func (pc *partitionConsumer) Messages() <-chan *sarama.ConsumerMessage {
 	return pc.dispatcher.Messages()
+}
+
+// AsyncClose releases the dispatcher goroutine before shutting down the wrapped
+// PartitionConsumer. Callers stop reading Messages() once they close the consumer,
+// so a dispatcher blocked on a pending send would otherwise never return.
+func (pc *partitionConsumer) AsyncClose() {
+	pc.dispatcher.Close()
+	pc.PartitionConsumer.AsyncClose()
+}
+
+// Close releases the dispatcher goroutine before shutting down the wrapped
+// PartitionConsumer. See AsyncClose.
+func (pc *partitionConsumer) Close() error {
+	pc.dispatcher.Close()
+	return pc.PartitionConsumer.Close()
 }
 
 // WrapPartitionConsumer wraps a sarama.PartitionConsumer causing each received
