@@ -29,6 +29,12 @@ type consumerGroupHandler struct {
 func (h *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	// Wrap claim
 	dispatcher := newConsumerMessagesDispatcherWrapper(claim, h.cfg)
+	// The wrapped handler may return before the claim's channel is drained -- on a
+	// handling error, or on a rebalance. Signal the dispatcher so it does not stay
+	// blocked mid-send holding a message (and the record batch that message aliases).
+	// Deferred rather than synchronous: sarama closes the underlying claim only after
+	// ConsumeClaim returns, so waiting for the dispatcher here would deadlock.
+	defer dispatcher.Close()
 	go dispatcher.Run()
 	claim = &consumerGroupClaim{
 		ConsumerGroupClaim: claim,
